@@ -1,0 +1,29 @@
+--Creates a Volatile Table that preserves data only for this session
+CREATE MULTISET VOLATILE TABLE test
+     (
+      col1 VARCHAR(100)
+PRIMARY INDEX ( col1 )
+ON COMMIT PRESERVE ROWS;
+
+--
+WITH RECURSIVE str_vert(col1, col_length, level, alphabets) AS
+(   --Seed statement to initialize column list & create end condition
+SELECT col1, CHARACTERS(col1), 1, SUBSTRING(col1,level,1) AS alphabets FROM test
+UNION ALL --Below statement will called each time with an increased level until level1 equals col_length(remember substr begins from 1)
+SELECT col1, col_length, level+1 AS level1, SUBSTRING(col1,level1,1) FROM str_vert WHERE level1 <= col_length
+)
+SELECT alphabets FROM str_vert;
+
+--Input: Col/String Value "ABCDE"
+
+insert into test values ("ABCDE");
+
+--Output: 
+
+alphabets
+---------
+A
+B
+C
+D
+E
